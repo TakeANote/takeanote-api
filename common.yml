@@ -1,0 +1,11 @@
+api:
+    build: api
+    dockerfile: Dockerfile
+
+postgres:
+    image: postgres:9.4
+    environment:
+      - POSTGRES_USER=takeanote
+
+redis:
+  image: redis:3.0.4
