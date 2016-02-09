@@ -6,6 +6,10 @@
 # KDE directory preferences
 .directory
 
+# Intellij
+.idea
+*.iml
+
 # Linux trash folder which might appear on any partition or disk
 .Trash-*
 
