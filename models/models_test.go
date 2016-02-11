@@ -63,7 +63,7 @@ var databaseConfigs = []DbConnectionString{
 func TestGenerateDBConnectionString(t *testing.T) {
 	for _, dbTest := range databaseConfigs {
 		connectionString, err := generateDBConnectionString(&dbTest.config)
-		if dbTest.config.DatabaseDriver == "failure" {
+		if dbTest.config.DatabaseDriver != "postgres" {
 			assert.Error(t, err)
 		} else {
 			assert.NoError(t, err)

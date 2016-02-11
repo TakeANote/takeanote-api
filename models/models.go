@@ -7,9 +7,7 @@ import (
 	"github.com/takeanote/takeanote-api/config"
 	"github.com/jinzhu/gorm"
 
-	_ "github.com/go-sql-driver/mysql" // MySQL Driver for gorm
 	_ "github.com/lib/pq"              // Postgres Driver for gorm
-	_ "github.com/mattn/go-sqlite3"    // SQLite Driver for gorm
 )
 
 func generateDBConnectionString(config *config.Config) (string, error) {
@@ -19,13 +17,6 @@ func generateDBConnectionString(config *config.Config) (string, error) {
 			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 			config.DatabaseHost, config.DatabasePort, config.DatabaseUser,
 			config.DatabasePassword, config.DatabaseName), nil
-	case "mysql":
-		return fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/%s",
-			config.DatabaseUser, config.DatabasePassword, config.DatabaseHost,
-			config.DatabasePort, config.DatabaseName), nil
-	case "sqlite", "sqlite3":
-		return fmt.Sprintf("%s", config.DatabaseName), nil
 	}
 	return "", fmt.Errorf("unknown DB driver: %s\n", config.DatabaseDriver)
 }
