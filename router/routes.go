@@ -80,7 +80,7 @@ func NewHeadRoute(path string, handler httputils.APIFunc) Route {
 func New(config *config.Config) Router {
 	r := &router{}
 	if db, err := models.OpenDBWithConfig(config); err != nil {
-		panic(fmt.Errorf("Fatal error cannot connect to database: %s\n", err))
+		panic(fmt.Errorf("fatal error cannot connect to database: %s\n", err))
 	} else {
 		r.initRoutes(&db, config)
 	}
@@ -101,6 +101,7 @@ func (r *router) initRoutes(db *gorm.DB, cfg *config.Config) {
 		// GET
 		// POST
 		NewPostRoute("/signup", auth.SignUp),
+		NewPostRoute("/signin", auth.SignIn),
 		// PUT
 		// PATCH
 		// DELETE

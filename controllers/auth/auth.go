@@ -7,12 +7,15 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/gorilla/context"
+	"github.com/takeanote/takeanote-api/config"
 	"github.com/takeanote/takeanote-api/httputils"
 	"github.com/takeanote/takeanote-api/models"
-	"github.com/takeanote/takeanote-api/config"
 
 	"github.com/jinzhu/gorm"
+	"github.com/satori/go.uuid"
 	"gopkg.in/redis.v3"
 )
 
@@ -21,6 +24,8 @@ var (
 	ErrTokenInvalid = errors.New("token invalid or expired")
 	// ErrAccountAlreadyExist is returned if an email already exists in the db.
 	ErrAccountAlreadyExist = errors.New("the account already exist")
+	// ErrInvalidCredentials is returned if an email and password don't match a db entry.
+	ErrInvalidCredentials = errors.New("invalid credentials")
 	// ErrWrongPassword is returned if the provided password doesn't match.
 	ErrWrongPassword = errors.New("wrong password")
 )
@@ -30,6 +35,18 @@ type user struct {
 	LastName  string `json:"lastname"`
 	Email     string `json:"email"`
 	Password  string `json:"password"`
+}
+
+const (
+	// TokenDuration is validity duration of a token.
+	TokenDuration = 24 * time.Hour
+	// UserKey is the key to reference the user in context.
+	UserKey = "context_user"
+)
+
+// Token holds the user token
+type Token struct {
+	Token string `json:"token"`
 }
 
 // Controller handles authentication routines.
@@ -82,4 +99,51 @@ func (controller Controller) SignUp(w http.ResponseWriter, r *http.Request, vars
 	httputils.WriteJSON(w, http.StatusNoContent, nil)
 
 	return nil
+}
+
+// SignIn handles User creation
+func (controller Controller) SignIn(w http.ResponseWriter, r *http.Request, vars map[string]string) error {
+	user := &user{}
+	dbUser := &models.User{}
+
+	if err := json.NewDecoder(r.Body).Decode(user); err != nil {
+		httputils.WriteError(w, models.NewError(http.StatusBadRequest, err))
+		return err
+	}
+	user.Email = strings.ToLower(user.Email)
+
+	err := controller.DB.Where("email = ? AND password = ?",
+		user.Email, hashPassword(user.Password)).Find(&dbUser).Error
+	if err != nil {
+		httputils.WriteError(w, models.NewError(http.StatusUnauthorized, ErrInvalidCredentials))
+		return err
+	}
+
+	uuid := uuid.NewV4()
+	controller.RedisClient.Set(uuid.String(), user.Email, TokenDuration)
+
+	httputils.WriteJSON(w, http.StatusOK, Token{
+		Token: uuid.String(),
+	})
+
+	return nil
+}
+
+// AuthMiddleware handles token checking.
+func (controller Controller) AuthMiddleware(fn httputils.APIFunc) httputils.APIFunc {
+	return func(w http.ResponseWriter, r *http.Request, vars map[string]string) error {
+		bearer := r.Header.Get("Authorization")
+		if strings.ToUpper(bearer[0:7]) == "BEARER " {
+			userToken := bearer[7:]
+			email := controller.RedisClient.Get(userToken)
+			if email != nil {
+				var user models.User
+				controller.DB.Find(&user, "email = ?", email)
+				context.Set(r, UserKey, user)
+				return fn(w, r, vars)
+			}
+		}
+		httputils.WriteError(w, models.NewError(http.StatusUnauthorized, ErrInvalidCredentials))
+		return ErrInvalidCredentials
+	}
 }
