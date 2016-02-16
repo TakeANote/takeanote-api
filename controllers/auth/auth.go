@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/context"
 	"github.com/takeanote/takeanote-api/config"
 	"github.com/takeanote/takeanote-api/httputils"
 	"github.com/takeanote/takeanote-api/models"
@@ -39,6 +40,8 @@ type user struct {
 const (
 	// TokenDuration is validity duration of a token.
 	TokenDuration = 24 * time.Hour
+	// UserKey is the key to reference the user in context.
+	UserKey = "context_user"
 )
 
 // Token holds the user token
@@ -124,4 +127,23 @@ func (controller Controller) SignIn(w http.ResponseWriter, r *http.Request, vars
 	})
 
 	return nil
+}
+
+// AuthMiddleware handles token checking.
+func (controller Controller) AuthMiddleware(fn httputils.APIFunc) httputils.APIFunc {
+	return func(w http.ResponseWriter, r *http.Request, vars map[string]string) error {
+		bearer := r.Header.Get("Authorization")
+		if strings.ToUpper(bearer[0:7]) == "BEARER " {
+			userToken := bearer[7:]
+			email := controller.RedisClient.Get(userToken)
+			if email != nil {
+				var user models.User
+				controller.DB.Find(&user, "email = ?", email)
+				context.Set(r, UserKey, user)
+				return fn(w, r, vars)
+			}
+		}
+		httputils.WriteError(w, models.NewError(http.StatusUnauthorized, ErrInvalidCredentials))
+		return ErrInvalidCredentials
+	}
 }
