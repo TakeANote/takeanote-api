@@ -129,6 +129,32 @@ func (controller Controller) SignIn(w http.ResponseWriter, r *http.Request, vars
 	return nil
 }
 
+// SignOut handles User creation
+func (controller Controller) SignOut(w http.ResponseWriter, r *http.Request, vars map[string]string) error {
+	bearer := r.Header.Get("Authorization")
+	if len(bearer) > 7 && strings.ToUpper(bearer[0:7]) == "BEARER " {
+		userToken := bearer[7:]
+		email := controller.RedisClient.Get(userToken).Val()
+		if len(email) > 0 {
+			var user models.User
+			err := controller.DB.Where("email = ?", email).Find(&user).Error
+			if err != nil {
+				httputils.WriteError(w, models.NewError(http.StatusUnauthorized, ErrInvalidCredentials))
+				return err
+			}
+			err = controller.RedisClient.Del(userToken).Err()
+			if err != nil {
+				httputils.WriteJSON(w, http.StatusNoContent, nil)
+				return err
+			}
+			httputils.WriteJSON(w, http.StatusNoContent, nil)
+			return nil
+		}
+	}
+	httputils.WriteError(w, models.NewError(http.StatusUnauthorized, ErrInvalidCredentials))
+	return ErrInvalidCredentials
+}
+
 // AuthMiddleware handles token checking.
 func (controller Controller) AuthMiddleware(fn httputils.APIFunc) httputils.APIFunc {
 	return func(w http.ResponseWriter, r *http.Request, vars map[string]string) error {
