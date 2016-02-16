@@ -109,6 +109,7 @@ func (r *router) initRoutes(db *gorm.DB, cfg *config.Config) {
 		NewPutRoute("/profile", auth.AuthMiddleware(user.ProfileEdit)),
 		// PATCH
 		// DELETE
+		NewDeleteRoute("/signout", auth.SignOut),
 		// HEAD
 		// OPTIONS
 	}
