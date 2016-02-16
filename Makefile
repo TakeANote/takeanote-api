@@ -17,6 +17,9 @@ status:
 logs:
 	$(COMPOSE) -f $(FLAVOR) logs
 
+build:
+	$(COMPOSE) -f $(FLAVOR) build
+
 restart:
 	$(COMPOSE) -f $(FLAVOR) stop api web
 	$(COMPOSE) -f $(FLAVOR) start api web
