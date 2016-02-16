@@ -133,12 +133,16 @@ func (controller Controller) SignIn(w http.ResponseWriter, r *http.Request, vars
 func (controller Controller) AuthMiddleware(fn httputils.APIFunc) httputils.APIFunc {
 	return func(w http.ResponseWriter, r *http.Request, vars map[string]string) error {
 		bearer := r.Header.Get("Authorization")
-		if strings.ToUpper(bearer[0:7]) == "BEARER " {
+		if len(bearer) > 7 && strings.ToUpper(bearer[0:7]) == "BEARER " {
 			userToken := bearer[7:]
-			email := controller.RedisClient.Get(userToken)
-			if email != nil {
+			email := controller.RedisClient.Get(userToken).Val()
+			if len(email) > 0 {
 				var user models.User
-				controller.DB.Find(&user, "email = ?", email)
+				err := controller.DB.Where("email = ?", email).Find(&user).Error
+				if err != nil {
+					httputils.WriteError(w, models.NewError(http.StatusUnauthorized, ErrInvalidCredentials))
+					return err
+				}
 				context.Set(r, UserKey, user)
 				return fn(w, r, vars)
 			}

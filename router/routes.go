@@ -6,6 +6,7 @@ import (
 
 	"github.com/takeanote/takeanote-api/config"
 	"github.com/takeanote/takeanote-api/controllers/auth"
+	"github.com/takeanote/takeanote-api/controllers/user"
 	"github.com/takeanote/takeanote-api/httputils"
 	"github.com/takeanote/takeanote-api/models"
 
@@ -97,8 +98,10 @@ func (r *router) Routes() []Route {
 func (r *router) initRoutes(db *gorm.DB, cfg *config.Config) {
 	db.AutoMigrate(&models.User{})
 	auth := auth.NewController(db, cfg)
+	user := user.NewController(db)
 	r.routes = []Route{
 		// GET
+		NewGetRoute("/profile", auth.AuthMiddleware(user.ProfileView)),
 		// POST
 		NewPostRoute("/signup", auth.SignUp),
 		NewPostRoute("/signin", auth.SignIn),
