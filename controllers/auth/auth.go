@@ -67,7 +67,7 @@ func NewController(db *gorm.DB, cfg *config.Config) *Controller {
 }
 
 // HashPassword hash password using sha512 and salt
-func hashPassword(password string) string {
+func HashPassword(password string) string {
 	shaHandler := sha512.New()
 	shaHandler.Write([]byte(password))
 
@@ -87,7 +87,7 @@ func (controller Controller) SignUp(w http.ResponseWriter, r *http.Request, vars
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
-		Password:  hashPassword(user.Password),
+		Password:  HashPassword(user.Password),
 	}
 
 	err := controller.DB.Create(dbUser).Error
@@ -113,7 +113,7 @@ func (controller Controller) SignIn(w http.ResponseWriter, r *http.Request, vars
 	user.Email = strings.ToLower(user.Email)
 
 	err := controller.DB.Where("email = ? AND password = ?",
-		user.Email, hashPassword(user.Password)).Find(&dbUser).Error
+		user.Email, HashPassword(user.Password)).Find(&dbUser).Error
 	if err != nil {
 		httputils.WriteError(w, models.NewError(http.StatusUnauthorized, ErrInvalidCredentials))
 		return err
