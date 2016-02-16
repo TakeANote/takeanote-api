@@ -106,6 +106,7 @@ func (r *router) initRoutes(db *gorm.DB, cfg *config.Config) {
 		NewPostRoute("/signup", auth.SignUp),
 		NewPostRoute("/signin", auth.SignIn),
 		// PUT
+		NewPutRoute("/profile", auth.AuthMiddleware(user.ProfileEdit)),
 		// PATCH
 		// DELETE
 		// HEAD
