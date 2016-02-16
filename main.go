@@ -25,14 +25,12 @@ func main() {
 	m = m.StrictSlash(false).PathPrefix("/v1").Subrouter()
 
 	app.RegisterRoutes(m)
-
 	n := negroni.New()
 
 	// Middlewares
 	n.Use(gzip.Gzip(gzip.DefaultCompression))
 	n.Use(negroni.NewRecovery())
-	n.Use(negronilogrus.NewMiddlewareFromLogger(app.GetLogger(), 
-"takeanote"))
+	n.Use(negronilogrus.NewMiddlewareFromLogger(app.GetLogger(), "takeanote"))
 
 	n.UseHandler(m)
 	n.Run(fmt.Sprintf(":%d", app.GetPort()))

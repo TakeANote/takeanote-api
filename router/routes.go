@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/takeanote/takeanote-api/config"
+	"github.com/takeanote/takeanote-api/controllers/auth"
 	"github.com/takeanote/takeanote-api/httputils"
 	"github.com/takeanote/takeanote-api/models"
 
@@ -93,10 +94,13 @@ func (r *router) Routes() []Route {
 
 // initRoutes initializes the routes in this router
 // Use authController.OAuth2Middleware(httputils.APIFunc) to protect a route.
-func (r *router) initRoutes(db *gorm.DB, config *config.Config) {
+func (r *router) initRoutes(db *gorm.DB, cfg *config.Config) {
+	db.AutoMigrate(&models.User{})
+	auth := auth.NewController(db, cfg)
 	r.routes = []Route{
 		// GET
 		// POST
+		NewPostRoute("/signup", auth.SignUp),
 		// PUT
 		// PATCH
 		// DELETE
