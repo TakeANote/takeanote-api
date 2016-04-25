@@ -83,7 +83,7 @@ func New(config *config.Config) Router {
 	if db, err := models.OpenDBWithConfig(config); err != nil {
 		panic(fmt.Errorf("fatal error cannot connect to database: %s\n", err))
 	} else {
-		r.initRoutes(&db, config)
+		r.initRoutes(db, config)
 	}
 	return r
 }

@@ -22,14 +22,14 @@ func generateDBConnectionString(config *config.Config) (string, error) {
 }
 
 // OpenDBWithConfig open a gorm.DB connection thanks to config.Database
-func OpenDBWithConfig(config *config.Config) (dbConn gorm.DB, err error) {
+func OpenDBWithConfig(config *config.Config) (dbConn *gorm.DB, err error) {
 	var connectionString string
 	if connectionString, err = generateDBConnectionString(config); err != nil {
-		return gorm.DB{}, err
+		return nil, err
 	}
 
 	if dbConn, err = gorm.Open(config.DatabaseDriver, connectionString); err != nil {
-		return dbConn, err
+		return nil, err
 	}
 	return dbConn, err
 }
