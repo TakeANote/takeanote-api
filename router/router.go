@@ -3,20 +3,36 @@ package router
 import (
 	"net/http"
 
-	"github.com/takeanote/takeanote-api/httputils"
-
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
+	"github.com/takeanote/takeanote-api/api"
+	"github.com/takeanote/takeanote-api/router/middleware"
+	"github.com/takeanote/takeanote-api/router/middleware/header"
 )
 
-// Router defines an interface to specify a group of routes to add to API.
-type Router interface {
-	Routes() []Route
-}
+// Load takes infinite number of middleware and apply them in order
+// to the gin router.
+func Load(middlewares ...gin.HandlerFunc) http.Handler {
+	e := gin.New()
+	e.Use(gin.Recovery())
 
-// Route defines an individual API route in the API.
-type Route interface {
-	// Register adds the handler route to the docker mux.
-	Register(*mux.Router, http.Handler)
-	// Handler returns the raw function to create the http handler.
-	Handler() httputils.APIFunc
+	e.Use(header.NoCache)
+	e.Use(header.Options)
+	e.Use(header.Secure)
+	e.Use(middlewares...)
+
+	v1 := e.Group("/v1")
+	{
+		v1.POST("/users", api.SignUp)
+
+		v1.POST("/session", api.SignIn)
+		v1.DELETE("/session", api.SignOut)
+
+		auth := v1.Group("")
+		{
+			auth.Use(middleware.Session)
+			auth.GET("/profile", api.ProfileView)
+			auth.PATCH("/profile", api.ProfileEdit)
+		}
+	}
+	return e
 }

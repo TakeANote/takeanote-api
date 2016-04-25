@@ -8,16 +8,13 @@ api:
         - postgres:db
         - redis
     environment:
-        - TAN_BASE_URL=api.takeanote.org
-        - TAN_PORT=80
-        - TAN_LOG_LEVEL=debug
-        - TAN_REDIS_ADDR=redis:6379
-        - TAN_DB_DRIVER=postgres
-        - TAN_DB_HOST=db
-        - TAN_DB_PORT=5432
-        - TAN_DB_NAME=takeanote
-        - TAN_DB_USER=takeanote
-        - TAN_DB_PASSWORD=thisisdev
+        - HTTP_PORT=80
+        - LOG_LEVEL=debug
+        - REDIS_ADDR=redis:6379
+        - PGSQL_USER=takeanote
+        - PGSQL_PW=thisisdev
+        - PGSQL_HOST_NAME=db
+        - PGSQL_DB_NAME=takeanote
 
 postgres:
     extends:

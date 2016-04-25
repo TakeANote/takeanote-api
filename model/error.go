@@ -1,4 +1,4 @@
-package models
+package model
 
 // Error describes an error that occured in the API with a message and HTTP status code
 type Error struct {
