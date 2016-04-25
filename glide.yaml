@@ -1,0 +1,15 @@
+package: github.com/takeanote/takeanote-api
+import:
+- package: github.com/Sirupsen/logrus
+- package: github.com/codegangsta/negroni
+- package: github.com/gorilla/context
+- package: github.com/gorilla/mux
+- package: github.com/jinzhu/gorm
+- package: github.com/kelseyhightower/envconfig
+- package: github.com/lib/pq
+- package: github.com/meatballhat/negroni-logrus
+- package: github.com/phyber/negroni-gzip
+  subpackages:
+  - gzip
+- package: github.com/satori/go.uuid
+- package: gopkg.in/redis.v3
